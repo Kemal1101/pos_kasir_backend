@@ -49,4 +49,20 @@ class User extends Authenticatable
     protected $casts = [
         'password' => 'hashed',
     ];
+
+    /**
+     * The role the user belongs to.
+     */
+    public function role()
+    {
+        return $this->belongsTo(Role::class, 'role_id', 'role_id');
+    }
+
+    /**
+     * Sales created by the user.
+     */
+    public function sales()
+    {
+        return $this->hasMany(Sale::class, 'user_id', 'user_id');
+    }
 }
