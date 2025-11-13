@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\UsersController;
 
 /*
 |--------------------------------------------------------------------------
@@ -25,4 +26,12 @@ Route::group(['prefix' => 'categories'], function () {
     Route::post('/add_category', [CategoryController::class, 'add_category']);
     Route::put('/{id}', [CategoryController::class, 'edit_category']);
     Route::delete('/{id}', [CategoryController::class, 'delete_category']);
+});
+
+// Users management routes
+Route::group(['prefix' => 'users'], function () {
+    Route::get('/', [UsersController::class, 'list_user']);
+    Route::post('/add_user', [UsersController::class, 'add_user']);
+    Route::put('/{id}', [UsersController::class, 'edit_user']);
+    Route::delete('/{id}', [UsersController::class, 'delete_user']);
 });

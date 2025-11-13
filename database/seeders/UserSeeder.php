@@ -16,25 +16,29 @@ class UserSeeder extends Seeder
     {
         $now = now();
 
-        // find Admin role id if exists
         $adminRoleId = DB::table('roles')->where('name', 'Admin')->value('role_id');
         $kasirRoleId = DB::table('roles')->where('name', 'Kasir')->value('role_id');
 
+        // User 1: Admin
         DB::table('users')->updateOrInsert(
+            ['email' => 'valina@gmail.com'], // kunci unik
             [
                 'name' => 'Nervalina',
                 'username' => 'valina',
-                'email' => 'valina@gmail.com',
                 'password' => Hash::make('password'),
                 'uuid' => (string) Str::uuid(),
                 'role_id' => $adminRoleId,
                 'created_at' => $now,
                 'updated_at' => $now,
-            ],
+            ]
+        );
+
+        // User 2: Kasir
+        DB::table('users')->updateOrInsert(
+            ['email' => 'dewi@gmail.com'], // kunci unik
             [
                 'name' => 'Dewi',
                 'username' => 'dewi',
-                'email' => 'dewi@gmail.com',
                 'password' => Hash::make('password'),
                 'uuid' => (string) Str::uuid(),
                 'role_id' => $kasirRoleId,
@@ -43,4 +47,5 @@ class UserSeeder extends Seeder
             ]
         );
     }
+
 }
