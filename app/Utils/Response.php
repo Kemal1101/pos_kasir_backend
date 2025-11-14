@@ -89,4 +89,21 @@ class Response
             'data' => null,
         ], 403);
     }
+
+    public static function token(string $token, $user = null, ?int $expires = null): JsonResponse
+    {
+        return response()->json([
+            'meta' => [
+                'status' => 200,
+                'message' => 'Login berhasil',
+            ],
+            'data' => [
+                'access_token' => $token,
+                'token_type'   => 'bearer',
+                'expires_in'   => $expires,
+                'user'         => $user,
+            ],
+            'errors' => null,
+        ], 200);
+    }
 }
