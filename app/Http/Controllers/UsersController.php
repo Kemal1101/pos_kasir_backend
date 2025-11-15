@@ -106,19 +106,31 @@ class UsersController extends Controller
     public function list_user(Request $request)
     {
         try {
-            //code...
             $query = User::with('role');
 
             if ($request->filled('role_id')) {
                 $query->where('role_id', $request->input('role_id'));
             }
 
-            $users = $query->get();
+            $limit = $request->input('limit', 10);
+            $users = $query->paginate($limit);
+
             if ($users->isEmpty()) {
-                # code...
                 return Response::notFound("Tidak ada user ditemukan");
             }
-            return Response::success($users, 'Daftar user berhasil diambil');
+
+            // Format pagination
+            $paginationData = [
+                'items'        => $users->items(),
+                'current_page' => $users->currentPage(),
+                'limit'        => $users->perPage(),
+                'total'        => $users->total(),
+                'last_page'    => $users->lastPage(),
+                'next_page'    => $users->nextPageUrl(),
+                'prev_page'    => $users->previousPageUrl(),
+            ];
+
+            return Response::pagination($paginationData, 'Daftar user berhasil diambil');
         } catch (Throwable $error) {
             return Response::error($error, 'Gagal mengambil data user');
         }

@@ -106,4 +106,23 @@ class Response
             'errors' => null,
         ], 200);
     }
+
+    public static function pagination($data, string $message = 'Success', int $status = 200): JsonResponse
+    {
+        return response()->json([
+            'meta' => [
+                'status'  => $status,
+                'message' => $message,
+            ],
+            'data' => $data['items'],
+            'pagination' => [
+                'current_page' => $data['current_page'],
+                'limit'        => $data['limit'],
+                'total'        => $data['total'],
+                'last_page'    => $data['last_page'],
+                'next_page'    => $data['next_page'],
+                'prev_page'    => $data['prev_page'],
+            ]
+        ], $status);
+    }
 }
