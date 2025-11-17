@@ -34,9 +34,11 @@ Route::group(['prefix' => 'categories'], function () {
 });
 
 // Users management routes
-Route::group(['prefix' => 'users'], function () {
-    Route::get('/', [UsersController::class, 'list_user']);
-    Route::post('/add_user', [UsersController::class, 'add_user']);
-    Route::put('/{id}', [UsersController::class, 'edit_user']);
-    Route::delete('/{id}', [UsersController::class, 'delete_user']);
-});
+Route::prefix('users')
+    ->middleware(['jwt.verify', 'role:Admin'])
+    ->group(function () {
+        Route::get('/', [UsersController::class, 'list_user']);
+        Route::post('/add_user', [UsersController::class, 'add_user']);
+        Route::put('/{id}', [UsersController::class, 'edit_user']);
+        Route::delete('/{id}', [UsersController::class, 'delete_user']);
+    });
