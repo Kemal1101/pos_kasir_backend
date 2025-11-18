@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use App\Models\Product;
 use App\Utils\Response;
 use Throwable;
@@ -15,73 +16,97 @@ class ProductController extends Controller
      */
     public function add_product(Request $request): JsonResponse
     {
-        try {
-            $data = $request->validate([
-                'categories_id' => 'nullable|exists:categories,categories_id',
-                'name' => 'required|string|max:191',
-                'description' => 'nullable|string',
-                'cost_price' => 'nullable|numeric',
-                'selling_price' => 'nullable|numeric',
-                'product_images' => 'nullable|array',
-                'stock' => 'nullable|integer',
-                'barcode' => 'nullable|string|max:191',
-            ]);
+        $request->validate([
+            'categories_id' => 'required|integer',
+            'name' => 'required|string',
+            'cost_price' => 'required|numeric',
+            'selling_price' => 'required|numeric',
+            'stock' => 'required|integer',
+            'product_images' => 'nullable|image|mimes:jpg,jpeg,png',
+        ]);
 
-            if (isset($data['product_images']) && is_array($data['product_images'])) {
-                $data['product_images'] = json_encode($data['product_images']);
-            }
+        // Upload ke Cloudinary jika ada gambar
+        $imageUrl = null;
 
-            $product = Product::create($data);
+        if ($request->hasFile('product_images')) {
+            $image = $request->file('product_images');
 
-            // decode images for response
-            if (! empty($product->product_images)) {
-                $product->product_images = json_decode($product->product_images);
-            }
+            // Upload ke Cloudinary
+            $uploadedFileUrl = Cloudinary::upload($image->getRealPath(), [
+                'folder' => 'products'
+            ])->getSecurePath();
 
-            return Response::success($product, 'Product created', 201);
-        } catch (Throwable $e) {
-            return Response::error($e);
+            $imageUrl = $uploadedFileUrl;
         }
+
+        // Simpan produk
+        $product = Product::create([
+            'categories_id' => $request->categories_id,
+            'name' => $request->name,
+            'description' => $request->description,
+            'cost_price' => $request->cost_price,
+            'selling_price' => $request->selling_price,
+            'product_images' => $imageUrl,
+            'stock' => $request->stock,
+            'barcode' => $request->barcode,
+        ]);
+
+        return response()->json([
+            'message' => 'Produk berhasil ditambahkan',
+            'data' => $product,
+        ]);
     }
 
     /**
      * Edit an existing product.
      */
-    public function edit_product(Request $request, $id): JsonResponse
+    public function edit_product(Request $request, $id)
     {
-        try {
-            $product = Product::find($id);
+        $product = Product::findOrFail($id);
 
-            if (! $product) {
-                return Response::notFound('Product not found');
-            }
+        // Validasi minimal (opsional)
+        $request->validate([
+            'categories_id' => 'sometimes|exists:categories,categories_id',
+            'name' => 'sometimes|string|max:255',
+            'description' => 'sometimes|string',
+            'cost_price' => 'sometimes|numeric',
+            'selling_price' => 'sometimes|numeric',
+            'stock' => 'sometimes|numeric',
+            'barcode' => 'sometimes|string|max:100',
+            'product_images' => 'sometimes|file|image|max:2048'
+        ]);
 
-            $data = $request->validate([
-                'categories_id' => 'nullable|exists:categories,categories_id',
-                'name' => 'sometimes|required|string|max:191',
-                'description' => 'nullable|string',
-                'cost_price' => 'nullable|numeric',
-                'selling_price' => 'nullable|numeric',
-                'product_images' => 'nullable|array',
-                'stock' => 'nullable|integer',
-                'barcode' => 'nullable|string|max:191',
-            ]);
+        // Ambil data product sebelumnya
+        $imageUrl = $product->product_images;
 
-            if (array_key_exists('product_images', $data) && is_array($data['product_images'])) {
-                $data['product_images'] = json_encode($data['product_images']);
-            }
+        // Jika ada file gambar baru
+        if ($request->hasFile('product_images')) {
+            $image = Cloudinary::upload(
+                $request->file('product_images')->getRealPath(),
+                ['folder' => 'products']
+            )->getSecurePath();
 
-            $product->update($data);
-
-            $product = $product->fresh();
-            if (! empty($product->product_images)) {
-                $product->product_images = json_decode($product->product_images);
-            }
-
-            return Response::success($product, 'Product updated');
-        } catch (Throwable $e) {
-            return Response::error($e);
+            $imageUrl = $image;
         }
+
+        // Update hanya field yang dikirim user
+        $product->update(array_merge(
+            $request->only([
+                'categories_id',
+                'name',
+                'description',
+                'cost_price',
+                'selling_price',
+                'stock',
+                'barcode'
+            ]),
+            ['product_images' => $imageUrl] // gambar selalu disimpan (lama/baru)
+        ));
+
+        return response()->json([
+            'message' => 'Produk berhasil diupdate',
+            'data' => $product
+        ]);
     }
 
     /**

@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\UsersController;
 
 /*
@@ -34,11 +35,17 @@ Route::group(['prefix' => 'categories'], function () {
 });
 
 // Users management routes
-Route::prefix('users')
-    ->middleware(['jwt.verify', 'role:Admin'])
-    ->group(function () {
-        Route::get('/', [UsersController::class, 'list_user']);
-        Route::post('/add_user', [UsersController::class, 'add_user']);
-        Route::put('/{id}', [UsersController::class, 'edit_user']);
-        Route::delete('/{id}', [UsersController::class, 'delete_user']);
-    });
+Route::group(['prefix' => 'users'], function () {
+    Route::get('/', [UsersController::class, 'list_user']);
+    Route::post('/add_user', [UsersController::class, 'add_user']);
+    Route::put('/{id}', [UsersController::class, 'edit_user']);
+    Route::delete('/{id}', [UsersController::class, 'delete_user']);
+});
+
+Route::group(['prefix' => 'products'], function () {
+    Route::get('/', [ProductController::class, 'list_products']);
+    Route::post('/add_product', [ProductController::class, 'add_product']);
+    Route::post('/upload_image', [ProductController::class, 'upload_product_image']); // jika dipisah
+    Route::put('/{id}', [ProductController::class, 'edit_product']);
+    Route::delete('/{id}', [ProductController::class, 'delete_product']);
+});
