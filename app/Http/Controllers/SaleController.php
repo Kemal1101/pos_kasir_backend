@@ -66,13 +66,23 @@ class SaleController extends Controller
         try {
             return DB::transaction(function () use ($validated) {
                 $sale = Sale::lockForUpdate()->findOrFail($validated['sale_id']);
-                $product = Product::findOrFail($validated['product_id']);
+                $product = Product::lockForUpdate()->findOrFail($validated['product_id']);
 
                 $qty = $validated['quantity'] ?? 1;
                 $discount = (float) ($validated['discount_amount'] ?? 0);
 
+                // Ensure sufficient stock, prevent negative inventory
+                if ($product->stock < $qty) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'quantity' => ["Insufficient stock for product '{$product->name}' (available: {$product->stock}, requested: {$qty})"],
+                    ]);
+                }
+
                 // Base line amount per item is unit price * qty; keep it in sale_items.subtotal
                 $lineSubtotal = (float) $product->selling_price * $qty;
+
+                // Deduct product stock atomically under the same transaction
+                $product->decrement('stock', $qty);
 
                 $item = SaleItem::create([
                     'sale_id' => $sale->sale_id,
