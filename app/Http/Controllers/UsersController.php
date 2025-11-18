@@ -113,7 +113,8 @@ class UsersController extends Controller
             }
 
             $limit = $request->input('limit', 10);
-            $users = $query->paginate($limit);
+            $page = $request->input('page', 1);
+            $users = $query->paginate($limit, ['*'], 'page', $page);
 
             if ($users->isEmpty()) {
                 return Response::notFound("Tidak ada user ditemukan");
@@ -122,7 +123,7 @@ class UsersController extends Controller
             // Format pagination
             $paginationData = [
                 'items'        => $users->items(),
-                'current_page' => $users->currentPage(),
+                'page'         => $users->currentPage(),
                 'limit'        => $users->perPage(),
                 'total'        => $users->total(),
                 'last_page'    => $users->lastPage(),

@@ -116,7 +116,7 @@ class Response
             ],
             'data' => $data['items'],
             'pagination' => [
-                'current_page' => $data['current_page'],
+                'page'         => $data['page'],
                 'limit'        => $data['limit'],
                 'total'        => $data['total'],
                 'last_page'    => $data['last_page'],
