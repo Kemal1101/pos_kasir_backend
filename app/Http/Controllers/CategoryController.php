@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Models\Category;
-
-use function Symfony\Component\String\s;
+use App\Utils\Response;
+use Throwable;
 
 class CategoryController extends Controller
 {
@@ -15,17 +15,18 @@ class CategoryController extends Controller
      */
     public function add_category(Request $request): JsonResponse
     {
-        $data = $request->validate([
-            'name' => 'required|string|max:191',
-            'description' => 'nullable|string',
-        ]);
+        try {
+            $data = $request->validate([
+                'name' => 'required|string|max:191',
+                'description' => 'nullable|string',
+            ]);
 
-        $category = Category::create($data);
+            $category = Category::create($data);
 
-        return response()->json([
-            'message' => 'Category created',
-            'data' => $category,
-        ], 201);
+            return Response::success($category, 'Category created', 201);
+        } catch (Throwable $e) {
+            return Response::error($e);
+        }
     }
 
     /**
@@ -33,23 +34,24 @@ class CategoryController extends Controller
      */
     public function edit_category(Request $request, $id): JsonResponse
     {
-        $category = Category::find($id);
+        try {
+            $category = Category::find($id);
 
-        if (! $category) {
-            return response()->json(['message' => 'Category not found'], 404);
+            if (! $category) {
+                return Response::notFound('Category not found');
+            }
+
+            $data = $request->validate([
+                'name' => 'sometimes|required|string|max:191',
+                'description' => 'nullable|string',
+            ]);
+
+            $category->update($data);
+
+            return Response::success($category->fresh(), 'Category updated');
+        } catch (Throwable $e) {
+            return Response::error($e);
         }
-
-        $data = $request->validate([
-            'name' => 'sometimes|required|string|max:191',
-            'description' => 'nullable|string',
-        ]);
-
-        $category->update($data);
-
-        return response()->json([
-            'message' => 'Category updated',
-            'data' => $category->fresh(),
-        ]);
     }
 
     /**
@@ -57,15 +59,19 @@ class CategoryController extends Controller
      */
     public function delete_category($id): JsonResponse
     {
-        $category = Category::find($id);
+        try {
+            $category = Category::find($id);
 
-        if (! $category) {
-            return response()->json(['message' => 'Category not found'], 404);
+            if (! $category) {
+                return Response::notFound('Category not found');
+            }
+
+            $category->delete();
+
+            return Response::success(null, 'Category deleted');
+        } catch (Throwable $e) {
+            return Response::error($e);
         }
-
-        $category->delete();
-
-        return response()->json(['message' => 'Category deleted']);
     }
 
     /**
@@ -73,10 +79,11 @@ class CategoryController extends Controller
      */
     public function list_categories(): JsonResponse
     {
-        $categories = Category::all();
-
-        return response()->json([
-            'data' => $categories,
-        ], status: 200);
+        try {
+            $categories = Category::all();
+            return Response::success($categories);
+        } catch (Throwable $e) {
+            return Response::error($e);
+        }
     }
 }

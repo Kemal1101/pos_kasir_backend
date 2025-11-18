@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use App\Models\Product;
+use App\Utils\Response;
+use Throwable;
 
 class ProductController extends Controller
 {
@@ -112,15 +114,19 @@ class ProductController extends Controller
      */
     public function delete_product($id): JsonResponse
     {
-        $product = Product::find($id);
+        try {
+            $product = Product::find($id);
 
-        if (! $product) {
-            return response()->json(['message' => 'Product not found'], 404);
+            if (! $product) {
+                return Response::notFound('Product not found');
+            }
+
+            $product->delete();
+
+            return Response::success(null, 'Product deleted');
+        } catch (Throwable $e) {
+            return Response::error($e);
         }
-
-        $product->delete();
-
-        return response()->json(['message' => 'Product deleted']);
     }
 
     /**
@@ -128,22 +134,26 @@ class ProductController extends Controller
      */
     public function list_product(Request $request): JsonResponse
     {
-        $query = Product::with('category');
+        try {
+            $query = Product::with('category');
 
-        if ($request->filled('category_id')) {
-            $query->where('categories_id', $request->input('category_id'));
-        }
-
-        $products = $query->get();
-
-        // decode images for each product
-        $products->transform(function ($p) {
-            if (! empty($p->product_images)) {
-                $p->product_images = json_decode($p->product_images);
+            if ($request->filled('category_id')) {
+                $query->where('categories_id', $request->input('category_id'));
             }
-            return $p;
-        });
 
-        return response()->json(['data' => $products]);
+            $products = $query->get();
+
+            // decode images for each product
+            $products->transform(function ($p) {
+                if (! empty($p->product_images)) {
+                    $p->product_images = json_decode($p->product_images);
+                }
+                return $p;
+            });
+
+            return Response::success($products);
+        } catch (Throwable $e) {
+            return Response::error($e);
+        }
     }
 }
