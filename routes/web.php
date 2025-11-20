@@ -22,3 +22,7 @@ Route::group(['prefix' => 'categories'], function () {
     Route::put('/{id}', [CategoryController::class, 'edit_category']);
     Route::delete('/{id}', [CategoryController::class, 'delete_category']);
 });
+
+Route::get('/dashboard', function () {
+    return view('dashboard');
+});
