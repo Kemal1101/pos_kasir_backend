@@ -13,21 +13,22 @@ class CategoryController extends Controller
     /**
      * Add a new category.
      */
-    public function add_category(Request $request): JsonResponse
+    public function add_category(Request $request)
     {
-        try {
-            $data = $request->validate([
-                'name' => 'required|string|max:191',
-                'description' => 'nullable|string',
-            ]);
+        $validated = $request->validate([
+            'name' => 'required|string|max:191|unique:categories,name',
+            'description' => 'nullable|string',
+        ]);
 
-            $category = Category::create($data);
+        Category::create([
+            'name' => $validated['name'],
+            'description' => $validated['description'] ?? null,
+        ]);
 
-            return Response::success($category, 'Category created', 201);
-        } catch (Throwable $e) {
-            return Response::error($e);
-        }
+        return redirect("/category")
+            ->with('success', 'Kategori berhasil ditambahkan!');
     }
+
 
     /**
      * Edit an existing category.

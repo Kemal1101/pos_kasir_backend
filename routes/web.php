@@ -25,3 +25,11 @@ Route::group(['prefix' => 'categories'], function () {
 });
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+Route::get("/category", [DashboardController::class, 'category']);
+
+Route::group(['prefix' => 'categories'], function () {
+    Route::get('/', [CategoryController::class, 'list_categories']);
+    Route::post('/add_category', [CategoryController::class, 'add_category']);
+    Route::put('/{id}', [CategoryController::class, 'edit_category']);
+    Route::delete('/{id}', [CategoryController::class, 'delete_category']);
+});

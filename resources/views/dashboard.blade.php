@@ -3,8 +3,8 @@
 @section('content')
     <div class="flex justify-between items-center text-white mb-8 mt-2">
         <div>
-            <h2 class="text-2xl font-bold">Selamat Datang, Owner!</h2>
-            <p class="text-purple-100 text-sm opacity-90">Berikut adalah ringkasan toko Anda hari ini</p>
+            <h2 class="text-2xl font-bold text-gray-900 md:text-white">Selamat Datang, Owner!</h2>
+            <p class="text-sm opacity-90 text-gray-700 md:text-purple-100">Berikut adalah ringkasan toko Anda hari ini</p>
         </div>
         </div>
 

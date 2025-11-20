@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
 class DashboardController extends Controller
@@ -33,13 +35,13 @@ class DashboardController extends Controller
         $lastMonthEnd = now()->subMonthNoOverflow()->endOfMonth();
 
         $productsSoldThisMonth = (int) SaleItem::whereHas('sale', function ($q) use ($startOfMonth, $endOfMonth) {
-                $q->whereBetween('sale_date', [$startOfMonth, $endOfMonth]);
-            })
+            $q->whereBetween('sale_date', [$startOfMonth, $endOfMonth]);
+        })
             ->sum('quantity');
 
         $productsSoldLastMonth = (int) SaleItem::whereHas('sale', function ($q) use ($lastMonthStart, $lastMonthEnd) {
-                $q->whereBetween('sale_date', [$lastMonthStart, $lastMonthEnd]);
-            })
+            $q->whereBetween('sale_date', [$lastMonthStart, $lastMonthEnd]);
+        })
             ->sum('quantity');
 
         $recentSales = Sale::with(['payment', 'items'])
@@ -119,6 +121,34 @@ class DashboardController extends Controller
             'transactionsTodayChangeClass' => $transactionsTodayChangeClass,
             'productsSoldMonthChangeClass' => $productsSoldMonthChangeClass,
             'salesMonthChangeClass' => $salesMonthChangeClass,
+        ]);
+    }
+
+    public function category(Request $request)
+    {
+        $search = $request->input('search');
+
+        $categories = Category::withCount('products')
+            ->when($search, function ($query) use ($search) {
+                $query->where('name', 'like', '%' . $search . '%')
+                    ->orWhere('description', 'like', '%' . $search . '%');
+            })
+            ->orderBy('categories_id', 'asc')
+            ->paginate(5) // jumlah per halaman
+            ->appends(['search' => $search]);
+
+        $produk = Product::count();
+
+        $mostCategory = Category::withCount('products')
+            ->orderBy('products_count', 'desc')
+            ->first();
+
+
+
+        return view('categoryManagement', [
+            "categories" => $categories,
+            "produk" => $produk,
+            "mostCategory" => $mostCategory,
         ]);
     }
 }
