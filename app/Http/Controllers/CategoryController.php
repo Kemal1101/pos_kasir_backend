@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Models\Category;
 use App\Utils\Response;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Throwable;
 
 class CategoryController extends Controller
@@ -33,47 +34,53 @@ class CategoryController extends Controller
     /**
      * Edit an existing category.
      */
-    public function edit_category(Request $request, $id): JsonResponse
+    public function edit_category(Request $request, $id)
     {
         try {
-            $category = Category::find($id);
-
-            if (! $category) {
-                return Response::notFound('Category not found');
-            }
+            $category = Category::findOrFail($id);
 
             $data = $request->validate([
-                'name' => 'sometimes|required|string|max:191',
+                'name' => 'required|string|max:191',
                 'description' => 'nullable|string',
             ]);
 
             $category->update($data);
 
-            return Response::success($category->fresh(), 'Category updated');
+            return redirect("/category")
+                ->with('success', 'Kategori berhasil diperbarui!');
+        } catch (ModelNotFoundException $e) {
+            return back()->with('error', 'Kategori tidak ditemukan');
         } catch (Throwable $e) {
-            return Response::error($e);
+            return back()->with('error', $e->getMessage());
         }
     }
 
     /**
      * Delete a category.
      */
-    public function delete_category($id): JsonResponse
+    public function delete_category($id)
     {
         try {
-            $category = Category::find($id);
-
-            if (! $category) {
-                return Response::notFound('Category not found');
+            // Cari data, kalau tidak ada akan throw ModelNotFoundException
+            $category = Category::findOrFail($id);
+            if ($category->products()->exists()) {
+                return back()->with('error', 'Kategori memiliki relasi dengan product');
             }
 
+            // Hapus kategori
             $category->delete();
 
-            return Response::success(null, 'Category deleted');
+            // Redirect kembali ke halaman kategori
+            return redirect("/category")
+                ->with('success', 'Kategori berhasil dihapus!');
+        } catch (ModelNotFoundException $e) {
+            return back()->with('error', 'Kategori tidak ditemukan');
         } catch (Throwable $e) {
-            return Response::error($e);
+            return back()->with('error', $e->getMessage());
         }
     }
+
+
 
     /**
      * Return all categories.
