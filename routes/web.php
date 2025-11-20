@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\UsersController;
+use App\Http\Controllers\LoginController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -24,4 +26,12 @@ Route::group(['prefix' => 'categories'], function () {
     Route::delete('/{id}', [CategoryController::class, 'delete_category']);
 });
 
-Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+// Authentication (web session)
+Route::get('/login', [LoginController::class, 'show'])->name('login.form');
+Route::post('/login', [LoginController::class, 'authenticate'])->name('login.perform');
+Route::post('/logout', [LoginController::class, 'logout'])->name('logout.perform');
+
+Route::middleware(['web_auth'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/users', [UsersController::class, 'manage'])->name('users.manage');
+});
