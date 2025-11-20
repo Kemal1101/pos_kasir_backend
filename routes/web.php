@@ -26,7 +26,7 @@ Route::group(['prefix' => 'categories'], function () {
     Route::delete('/{id}', [CategoryController::class, 'delete_category']);
 });
 
-Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+// Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard'); // moved under JWT-protected group
 Route::get("/category", [DashboardController::class, 'category']);
 
 Route::group(['prefix' => 'categories'], function () {
@@ -40,7 +40,7 @@ Route::get('/login', [AuthController::class, 'show'])->name('login.form');
 Route::post('/login', [AuthController::class, 'login'])->name('login.perform');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout.perform');
 
-Route::middleware(['web_auth'])->group(function () {
+Route::middleware(['jwt.cookie'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/users', [UsersController::class, 'manage'])->name('users.manage');
 });
