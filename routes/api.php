@@ -1,12 +1,12 @@
 <?php
 
-use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\SaleController;
+use App\Http\Controllers\Api\UsersController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\ProductController;
-use App\Http\Controllers\UsersController;
-use App\Http\Controllers\SaleController;
 
 /*
 |--------------------------------------------------------------------------
@@ -37,7 +37,7 @@ Route::group(['prefix' => 'categories'], function () {
 
 // Users management routes
 Route::prefix('users')
-    ->middleware(['jwt.verify', 'role:Admin'])
+    ->middleware(['jwt.cookie','jwt.verify', 'role:Admin'])
     ->group(function () {
         Route::get('/', [UsersController::class, 'list_user']);
         Route::post('/add_user', [UsersController::class, 'add_user']);
