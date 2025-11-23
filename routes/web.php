@@ -5,6 +5,8 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UsersController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ProductController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -27,7 +29,7 @@ Route::group(['prefix' => 'categories'], function () {
 });
 
 // Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard'); // moved under JWT-protected group
-Route::get("/category", [DashboardController::class, 'category']);
+
 
 Route::group(['prefix' => 'categories'], function () {
     Route::get('/', [CategoryController::class, 'list_categories']);
@@ -41,9 +43,9 @@ Route::get('/login', [AuthController::class, 'show'])->name('login.form');
 Route::post('/login', [AuthController::class, 'login'])->name('login.perform');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout.perform');
 
-Route::middleware(['jwt.cookie', 'jwt.verify'])->group(function () {
+Route::middleware(['jwt.cookie', 'role:Admin'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/users', [UsersController::class, 'manage'])->name('users.manage');
+    Route::get("/category", [DashboardController::class, 'category']);
+    Route::get('/products', [ProductController::class, 'index'])->name('products.manage');
 });
-
-

@@ -73,5 +73,6 @@ class Kernel extends HttpKernel
         'jwt.verify' => \Tymon\JWTAuth\Http\Middleware\Authenticate::class,
         'role' => \App\Http\Middleware\RoleMiddleware::class,
         'web_auth' => \App\Http\Middleware\EnsureLoggedIn::class,
+        'jwt.check' => \App\Http\Middleware\JwtMiddleware::class,
     ];
 }
