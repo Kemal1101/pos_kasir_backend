@@ -16,97 +16,68 @@ class ProductController extends Controller
      */
     public function add_product(Request $request): JsonResponse
     {
-        $request->validate([
-            'categories_id' => 'required|integer',
-            'name' => 'required|string',
-            'cost_price' => 'required|numeric',
-            'selling_price' => 'required|numeric',
-            'stock' => 'required|integer',
-            'product_images' => 'nullable|image|mimes:jpg,jpeg,png',
-        ]);
+        try {
+            $data = $request->validate([
+                'categories_id' => 'required|integer',
+                'name' => 'required|string|max:191',
+                'cost_price' => 'required|numeric',
+                'selling_price' => 'required|numeric',
+                'stock' => 'required|integer',
+                'description' => 'nullable|string',
+                'barcode' => 'nullable|string|max:100',
+                'product_images' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            ]);
 
-        // Upload ke Cloudinary jika ada gambar
-        $imageUrl = null;
+            // Upload ke Cloudinary jika ada gambar
+            if ($request->hasFile('product_images')) {
+                $data['product_images'] = Cloudinary::upload(
+                    $request->file('product_images')->getRealPath(),
+                    ['folder' => 'products']
+                )->getSecurePath();
+            }
 
-        if ($request->hasFile('product_images')) {
-            $image = $request->file('product_images');
+            $product = Product::create($data);
 
-            // Upload ke Cloudinary
-            $uploadedFileUrl = Cloudinary::upload($image->getRealPath(), [
-                'folder' => 'products'
-            ])->getSecurePath();
-
-            $imageUrl = $uploadedFileUrl;
+            return Response::success($product, 'Product created');
+        } catch (Throwable $e) {
+            return Response::error($e);
         }
-
-        // Simpan produk
-        $product = Product::create([
-            'categories_id' => $request->categories_id,
-            'name' => $request->name,
-            'description' => $request->description,
-            'cost_price' => $request->cost_price,
-            'selling_price' => $request->selling_price,
-            'product_images' => $imageUrl,
-            'stock' => $request->stock,
-            'barcode' => $request->barcode,
-        ]);
-
-        return response()->json([
-            'message' => 'Produk berhasil ditambahkan',
-            'data' => $product,
-        ]);
     }
 
     /**
      * Edit an existing product.
      */
-    public function edit_product(Request $request, $id)
+    public function edit_product(Request $request, $id): JsonResponse
     {
-        $product = Product::findOrFail($id);
+        try {
+            $product = Product::find($id);
+            if (! $product) return Response::notFound('Product not found');
 
-        // Validasi minimal (opsional)
-        $request->validate([
-            'categories_id' => 'sometimes|exists:categories,categories_id',
-            'name' => 'sometimes|string|max:255',
-            'description' => 'sometimes|string',
-            'cost_price' => 'sometimes|numeric',
-            'selling_price' => 'sometimes|numeric',
-            'stock' => 'sometimes|numeric',
-            'barcode' => 'sometimes|string|max:100',
-            'product_images' => 'sometimes|file|image|max:2048'
-        ]);
+            $data = $request->validate([
+                'categories_id' => 'sometimes|integer',
+                'name' => 'sometimes|string|max:191',
+                'cost_price' => 'sometimes|numeric',
+                'selling_price' => 'sometimes|numeric',
+                'stock' => 'sometimes|integer',
+                'description' => 'nullable|string',
+                'barcode' => 'nullable|string|max:100',
+                'product_images' => 'sometimes|image|mimes:jpg,jpeg,png|max:2048',
+            ]);
 
-        // Ambil data product sebelumnya
-        $imageUrl = $product->product_images;
+            // Jika ada file gambar baru
+            if ($request->hasFile('product_images')) {
+                $data['product_images'] = Cloudinary::upload(
+                    $request->file('product_images')->getRealPath(),
+                    ['folder' => 'products']
+                )->getSecurePath();
+            }
 
-        // Jika ada file gambar baru
-        if ($request->hasFile('product_images')) {
-            $image = Cloudinary::upload(
-                $request->file('product_images')->getRealPath(),
-                ['folder' => 'products']
-            )->getSecurePath();
+            $product->update($data);
 
-            $imageUrl = $image;
+            return Response::success($product->fresh(), 'Product updated');
+        } catch (Throwable $e) {
+            return Response::error($e);
         }
-
-        // Update hanya field yang dikirim user
-        $product->update(array_merge(
-            $request->only([
-                'categories_id',
-                'name',
-                'description',
-                'cost_price',
-                'selling_price',
-                'stock',
-                'barcode'
-            ]),
-            ['product_images' => $imageUrl] // gambar selalu disimpan (lama/baru)
-        ));
-
-        return response()->json([
-            'message' => 'Produk berhasil diupdate',
-            'data' => $product
-        ]);
     }
 
     /**
@@ -116,10 +87,7 @@ class ProductController extends Controller
     {
         try {
             $product = Product::find($id);
-
-            if (! $product) {
-                return Response::notFound('Product not found');
-            }
+            if (! $product) return Response::notFound('Product not found');
 
             $product->delete();
 
@@ -142,14 +110,6 @@ class ProductController extends Controller
             }
 
             $products = $query->get();
-
-            // decode images for each product
-            $products->transform(function ($p) {
-                if (! empty($p->product_images)) {
-                    $p->product_images = json_decode($p->product_images);
-                }
-                return $p;
-            });
 
             return Response::success($products);
         } catch (Throwable $e) {

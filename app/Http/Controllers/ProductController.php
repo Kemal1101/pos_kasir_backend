@@ -2,15 +2,46 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use App\Models\Product;
+use App\Models\SaleItem;
 use App\Utils\Response;
 use Throwable;
 
 class ProductController extends Controller
 {
+    public function index(Request $request)
+    {
+        $search = $request->input('search');
+
+        // Ambil kategori untuk dropdown / info
+        $categories = Category::all();
+
+        // Query produk dengan search
+        $products = Product::with('category')
+            ->when($search, function ($query) use ($search) {
+                $query->where('name', 'like', '%' . $search . '%')
+                    ->orWhereHas('category', function ($q) use ($search) {
+                        $q->where('name', 'like', '%' . $search . '%');
+                    });
+            })
+            ->orderBy('product_id', 'asc')
+            ->paginate(10) // jumlah per halaman
+            ->appends(['search' => $search]); // supaya query string tetap ada di pagination
+
+        // Produk terbanyak terjual
+        $mostSoldProduct = SaleItem::select('product_id', 'name_product')
+            ->selectRaw('SUM(quantity) as total_sold')  // ini tetap perlu raw karena SUM() adalah fungsi agregat
+            ->groupBy('product_id', 'name_product')
+            ->orderByDesc('total_sold')
+            ->first();
+
+        return view('products.index', compact('products', 'categories', 'mostSoldProduct'));
+    }
+
     /**
      * Add a new product.
      */

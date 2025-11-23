@@ -143,8 +143,6 @@ class DashboardController extends Controller
             ->orderBy('products_count', 'desc')
             ->first();
 
-
-
         return view('categoryManagement', [
             "categories" => $categories,
             "produk" => $produk,
