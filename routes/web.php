@@ -20,8 +20,11 @@ use App\Http\Controllers\SalesReportController;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('login.form');
 });
+
+Route::get('/login', [AuthController::class, 'show'])->name('login.form');
+Route::post('/login', [AuthController::class, 'login'])->name('login.perform');
 
 Route::group(['prefix' => 'categories'], function () {
     Route::post('/add_category', [CategoryController::class, 'add_category']);
@@ -40,8 +43,6 @@ Route::group(['prefix' => 'categories'], function () {
 });
 
 // Authentication (web session)
-Route::get('/login', [AuthController::class, 'show'])->name('login.form');
-Route::post('/login', [AuthController::class, 'login'])->name('login.perform');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout.perform');
 
 Route::middleware(['jwt.cookie', 'role:Admin'])->group(function () {
