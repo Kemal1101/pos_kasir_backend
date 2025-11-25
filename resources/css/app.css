@@ -1,3 +1,6 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Prevent Alpine.js flicker on elements marked with x-cloak */
+[x-cloak]{display:none !important;}

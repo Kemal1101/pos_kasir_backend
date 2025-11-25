@@ -8,34 +8,54 @@ use Exception;
 use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
+use Tymon\JWTAuth\Exceptions\TokenExpiredException;
+use Tymon\JWTAuth\Exceptions\TokenInvalidException;
+use Tymon\JWTAuth\Exceptions\JWTException;
+
 class RoleMiddleware
 {
     public function handle(Request $request, Closure $next, ...$roles)
     {
         try {
-            // Ambil user dari JWT
+            // Autentikasi token
             $user = JWTAuth::parseToken()->authenticate();
 
             if (!$user) {
-                return Response::unauthorized('Token tidak valid');
+                return $this->redirectOrJson($request, 'Token tidak valid atau tidak ditemukan');
             }
 
-            // Ambil role_name dari relasi role
+            // Ambil role user
             $roleName = $user->role->name ?? null;
 
-            // Validasi role
+            // Cek apakah role diizinkan
             if (!in_array($roleName, $roles)) {
-                return Response::unauthorized('Anda tidak memiliki akses ke resource ini');
+                return $this->redirectOrJson($request, 'Anda tidak memiliki akses ke halaman ini');
             }
-        } catch (Exception $e) {
-
-            return Response::error(
-                $e,
-                'Token tidak valid atau telah kadaluarsa',
-                401
-            );
+        } catch (TokenExpiredException $e) {
+            return $this->redirectOrJson($request, 'Token telah kadaluarsa', $e, 401);
+        } catch (TokenInvalidException $e) {
+            return $this->redirectOrJson($request, 'Token tidak valid', $e, 401);
+        } catch (JWTException | Exception $e) {
+            return $this->redirectOrJson($request, 'Token tidak valid atau sudah kadaluarsa', $e, 401);
         }
 
         return $next($request);
+    }
+
+    // Helper untuk API & Web
+    private function redirectOrJson(Request $request, string $message, Exception $e = null, int $code = 401)
+    {
+        // ⛳ API selalu return JSON meskipun Accept: */*
+        if ($request->expectsJson() || $request->is('api/*')) {
+
+            return Response::error(
+                $e,
+                $message,
+                $code
+            );
+        }
+
+        // ⛳ Jika dari browser, redirect ke login
+        return redirect('/login')->with('error', $message);
     }
 }

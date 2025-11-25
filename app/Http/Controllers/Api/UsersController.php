@@ -1,9 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
 use App\Models\User;
-use App\Models\Role;
 use App\Utils\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -100,40 +99,41 @@ class UsersController extends Controller
             return Response::error($e, "Terjadi kesalahan saat menghapus user", 500);
         }
     }
+
     /**
-     * Web management view for users (search, filter, paginate).
+     * List users with their role.
      */
-    public function manage(Request $request)
+    public function list_user(Request $request)
     {
-        // Base query with role relation
-        $query = User::with('role');
+        try {
+            $query = User::with('role');
 
-        $search = trim($request->input('search', ''));
-        $roleFilter = $request->input('role_id');
-        $perPage = (int) $request->input('limit', 10);
-        if ($perPage <= 0) { $perPage = 10; }
+            if ($request->filled('role_id')) {
+                $query->where('role_id', $request->input('role_id'));
+            }
 
-        if ($search !== '') {
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%$search%")
-                  ->orWhere('email', 'like', "%$search%")
-                  ->orWhere('username', 'like', "%$search%");
-            });
+            $limit = $request->input('limit', 10);
+            $page = $request->input('page', 1);
+            $users = $query->paginate($limit, ['*'], 'page', $page);
+
+            if ($users->isEmpty()) {
+                return Response::notFound("Tidak ada user ditemukan");
+            }
+
+            // Format pagination
+            $paginationData = [
+                'items'        => $users->items(),
+                'page'         => $users->currentPage(),
+                'limit'        => $users->perPage(),
+                'total'        => $users->total(),
+                'last_page'    => $users->lastPage(),
+                'next_page'    => $users->nextPageUrl(),
+                'prev_page'    => $users->previousPageUrl(),
+            ];
+
+            return Response::pagination($paginationData, 'Daftar user berhasil diambil');
+        } catch (Throwable $error) {
+            return Response::error($error, 'Gagal mengambil data user');
         }
-        if ($roleFilter !== null && $roleFilter !== '') {
-            $query->where('role_id', $roleFilter);
-        }
-
-        $users = $query->orderByDesc('user_id')->paginate($perPage);
-        // Preserve query parameters in pagination links
-        $users->appends($request->query());
-        $roles = Role::orderBy('name')->get();
-
-        return view('user', [
-            'users' => $users,
-            'roles' => $roles,
-            'search' => $search,
-            'roleFilter' => $roleFilter,
-        ]);
     }
 }
