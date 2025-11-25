@@ -129,7 +129,7 @@ class UsersController extends Controller
         $users->appends($request->query());
         $roles = Role::orderBy('name')->get();
 
-        return view('user', [
+        return view('users.index', [
             'users' => $users,
             'roles' => $roles,
             'search' => $search,

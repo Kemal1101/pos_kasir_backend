@@ -104,7 +104,7 @@ class DashboardController extends Controller
         $productsSoldMonthChangeClass = $colorClass($percentProductsSoldMonthVsLastMonth);
         $salesMonthChangeClass = $colorClass($percentSalesThisMonthVsLastMonth);
 
-        return view('dashboard', [
+        return view('pages.dashboard', [
             'totalSalesToday' => $totalSalesToday,
             'transactionCountToday' => $transactionCountToday,
             'avgTransactionToday' => $avgTransactionToday,
@@ -143,7 +143,7 @@ class DashboardController extends Controller
             ->orderBy('products_count', 'desc')
             ->first();
 
-        return view('categoryManagement', [
+        return view('categories.index', [
             "categories" => $categories,
             "produk" => $produk,
             "mostCategory" => $mostCategory,

@@ -126,7 +126,7 @@ class SalesReportController extends Controller
             ];
         }
 
-        return view('laporanPenjualan', compact(
+        return view('reports.sales', compact(
             'selectedMonth',
             'totalSales',
             'totalTransactions',
