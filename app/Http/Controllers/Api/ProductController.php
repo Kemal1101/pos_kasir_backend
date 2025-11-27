@@ -116,4 +116,22 @@ class ProductController extends Controller
             return Response::error($e);
         }
     }
+
+    /**
+     * Get product detail by ID.
+     */
+    public function detail_product($id): JsonResponse
+    {
+        try {
+            $product = Product::with('category')->find($id);
+
+            if (!$product) {
+                return Response::notFound('Product not found');
+            }
+
+            return Response::success($product);
+        } catch (Throwable $e) {
+            return Response::error($e);
+        }
+    }
 }

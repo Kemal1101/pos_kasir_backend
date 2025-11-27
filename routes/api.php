@@ -49,7 +49,8 @@ Route::prefix('users')
     });
 
 Route::group(['prefix' => 'products'], function () {
-    Route::get('/', [ProductController::class, 'list_products']);
+    Route::get('/', [ProductController::class, 'list_product']);
+    Route::get('/{id}', [ProductController::class, 'detail_product']);
     Route::post('/add_product', [ProductController::class, 'add_product']);
     Route::post('/upload_image', [ProductController::class, 'upload_product_image']); // jika dipisah
     Route::put('/{id}', [ProductController::class, 'edit_product']);
