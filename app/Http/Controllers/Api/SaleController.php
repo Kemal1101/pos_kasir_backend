@@ -210,4 +210,47 @@ class SaleController extends Controller
             return Response::error($e);
         }
     }
+
+    /**
+     * Confirm payment for a sale.
+     * Updates payment status and payment_id.
+     */
+    public function confirm_payment(Request $request, $saleId): JsonResponse
+    {
+        $validated = $request->validate([
+            'payment_id' => 'required|exists:payments,payment_id',
+        ]);
+
+        try {
+            return DB::transaction(function () use ($saleId, $validated) {
+                $sale = Sale::lockForUpdate()->find($saleId);
+
+                if (!$sale) {
+                    return Response::notFound('Sale not found');
+                }
+
+                // Prevent re-confirming completed sales
+                if ($sale->payment_status === 'paid') {
+                    return Response::error(null, 'Sale already confirmed', 400);
+                }
+
+                // Check if sale has items
+                $itemsCount = SaleItem::where('sale_id', $saleId)->count();
+                if ($itemsCount === 0) {
+                    return Response::error(null, 'Cannot confirm payment for sale without items', 400);
+                }
+
+                // Update sale with payment info
+                $sale->update([
+                    'payment_id' => $validated['payment_id'],
+                    'payment_status' => 'paid',
+                    'sale_date' => now(),
+                ]);
+
+                return Response::success($sale->fresh()->load(['items.product', 'user', 'payment']), 'Payment confirmed successfully');
+            });
+        } catch (Throwable $e) {
+            return Response::error($e);
+        }
+    }
 }

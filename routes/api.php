@@ -70,6 +70,9 @@ Route::group(['prefix' => 'sales'], function () {
     // Fetch a sale with its items
     Route::get('/{saleId}', [SaleController::class, 'get_sale']);
 
+    // Confirm payment for a sale
+    Route::post('/{saleId}/confirm-payment', [SaleController::class, 'confirm_payment']);
+
     // Delete a draft sale
     Route::delete('/{saleId}', [SaleController::class, 'delete_sale']);
 });
