@@ -42,35 +42,56 @@
         <form action="{{ route('stock-additions.store') }}" method="POST" class="space-y-5">
             @csrf
 
-            {{-- Product Selection --}}
-            <div>
+            {{-- SEARCHABLE PRODUCT SELECTION --}}
+            <div class="relative">
                 <label class="block mb-2 text-sm font-semibold text-gray-700">
                     Produk <span class="text-red-500">*</span>
                 </label>
-                <div class="relative">
-                    <select name="product_id"
-                            x-model="selectedProduct"
-                            @change="updateProductInfo()"
-                            required
-                            class="w-full px-4 py-3 pr-10 transition border border-gray-300 rounded-lg appearance-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
-                        <option value="">-- Pilih Produk --</option>
-                        @foreach($products as $product)
-                            <option value="{{ $product->product_id }}"
-                                    data-stock="{{ $product->stock }}"
-                                    data-category="{{ $product->category->name ?? '-' }}"
-                                    {{ old('product_id') == $product->product_id ? 'selected' : '' }}>
-                                {{ $product->name }} (Stok: {{ $product->stock }})
-                            </option>
-                        @endforeach
-                    </select>
+
+                <input type="hidden" name="product_id" x-model="selectedProductId" required>
+
+                <div class="relative" @click.away="open = false">
+                    <input type="text"
+                           x-model="search"
+                           @focus="open = true"
+                           @input="open = true"
+                           placeholder="Ketik untuk mencari produk..."
+                           class="w-full px-4 py-3 pr-10 transition border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                           autocomplete="off">
+
                     <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none">
-                        <i class="text-gray-400 fa-solid fa-chevron-down"></i>
+                        <i class="text-gray-400 fa-solid fa-magnifying-glass" x-show="!selectedProductId"></i>
+                        <i class="text-green-500 fa-solid fa-check-circle" x-show="selectedProductId"></i>
+                    </div>
+
+                    <div x-show="open"
+                         x-transition.opacity
+                         class="absolute z-10 w-full mt-1 overflow-auto bg-white border border-gray-200 rounded-lg shadow-xl max-h-60">
+
+                        <ul class="divide-y divide-gray-100">
+                            <template x-for="product in filteredProducts" :key="product.product_id">
+                                <li @click="selectProduct(product)"
+                                    class="px-4 py-3 cursor-pointer hover:bg-purple-50 group">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <p class="font-medium text-gray-800 group-hover:text-purple-700" x-text="product.name"></p>
+                                            <p class="text-xs text-gray-500" x-text="'Kategori: ' + (product.category ? product.category.name : '-')"></p>
+                                        </div>
+                                        <span class="px-2 py-1 text-xs font-semibold text-gray-600 bg-gray-100 rounded" x-text="'Stok: ' + product.stock"></span>
+                                    </div>
+                                </li>
+                            </template>
+
+                            <li x-show="filteredProducts.length === 0" class="px-4 py-3 text-sm text-center text-gray-500">
+                                Produk tidak ditemukan.
+                            </li>
+                        </ul>
                     </div>
                 </div>
             </div>
 
             {{-- Product Info Display --}}
-            <div x-show="selectedProduct"
+            <div x-show="selectedProductId"
                  x-transition
                  class="p-4 border border-purple-200 bg-purple-50 rounded-lg">
                 <div class="grid grid-cols-2 gap-4">
@@ -106,7 +127,7 @@
             </div>
 
             {{-- New Stock Preview --}}
-            <div x-show="selectedProduct && quantity > 0"
+            <div x-show="selectedProductId && quantity > 0"
                  x-transition
                  class="p-4 border border-green-200 bg-green-50 rounded-lg">
                 <div class="flex items-center justify-between">
@@ -150,28 +171,44 @@
 <script>
 function stockAdditionData() {
     return {
-        selectedProduct: '{{ old('product_id') }}',
+        // Ambil data produk dari Laravel dan parsing ke JSON
+        products: @json($products),
+
+        search: '',
+        open: false,
+        selectedProductId: '{{ old('product_id') }}',
+
         productStock: 0,
         productCategory: '',
         quantity: {{ old('quantity', 0) }},
 
         init() {
-            if (this.selectedProduct) {
-                this.updateProductInfo();
+            // Jika ada old input (misal validasi gagal), set data awal
+            if (this.selectedProductId) {
+                const found = this.products.find(p => p.product_id == this.selectedProductId);
+                if (found) {
+                    this.selectProduct(found);
+                }
             }
         },
 
-        updateProductInfo() {
-            const select = document.querySelector('select[name="product_id"]');
-            const option = select.options[select.selectedIndex];
-
-            if (option.value) {
-                this.productStock = option.dataset.stock || 0;
-                this.productCategory = option.dataset.category || '-';
-            } else {
-                this.productStock = 0;
-                this.productCategory = '';
+        // Computed property untuk filter produk berdasarkan pencarian
+        get filteredProducts() {
+            if (this.search === '') {
+                return this.products;
             }
+            return this.products.filter(product => {
+                return product.name.toLowerCase().includes(this.search.toLowerCase());
+            });
+        },
+
+        // Fungsi saat user klik salah satu produk
+        selectProduct(product) {
+            this.selectedProductId = product.product_id;
+            this.search = product.name; // Tampilkan nama di input text
+            this.productStock = product.stock;
+            this.productCategory = product.category ? product.category.name : '-';
+            this.open = false; // Tutup dropdown
         }
     }
 }
