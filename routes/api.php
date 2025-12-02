@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\SaleController;
 use App\Http\Controllers\Api\UsersController;
@@ -40,7 +41,7 @@ Route::prefix('categories')
 
 // Users management routes
 Route::prefix('users')
-    ->middleware(['jwt.cookie','jwt.verify', 'role:Admin'])
+    ->middleware(['jwt.cookie', 'jwt.verify', 'role:Admin'])
     ->group(function () {
         Route::get('/', [UsersController::class, 'list_user']);
         Route::post('/add_user', [UsersController::class, 'add_user']);
@@ -75,4 +76,10 @@ Route::group(['prefix' => 'sales'], function () {
 
     // Delete a draft sale
     Route::delete('/{saleId}', [SaleController::class, 'delete_sale']);
+});
+
+Route::prefix('payment')->group(function () {
+    Route::post('/create', [PaymentController::class, 'createPayment']);
+    Route::post('/notification', [PaymentController::class, 'handleNotification']);
+    Route::get('/status/{orderId}', [PaymentController::class, 'checkStatus']);
 });

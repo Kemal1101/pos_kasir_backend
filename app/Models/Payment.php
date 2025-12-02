@@ -2,16 +2,26 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Payment extends Model
 {
-    use HasFactory;
-
-    protected $table = 'payments';
     protected $primaryKey = 'payment_id';
-    protected $fillable = ['payment_method'];
+
+    protected $fillable = [
+        'order_id',
+        'transaction_id',
+        'payment_type',
+        'gross_amount',
+        'transaction_status',
+        'snap_token',
+        'metadata'
+    ];
+
+    protected $casts = [
+        'metadata' => 'array',
+        'gross_amount' => 'decimal:2'
+    ];
 
     public function sales()
     {

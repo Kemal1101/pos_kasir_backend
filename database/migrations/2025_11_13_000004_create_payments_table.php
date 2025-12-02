@@ -13,7 +13,13 @@ return new class extends Migration
     {
         Schema::create('payments', function (Blueprint $table) {
             $table->id('payment_id');
-            $table->string('payment_method');
+            $table->string('order_id')->unique();
+            $table->string('transaction_id')->nullable();
+            $table->string('payment_type')->nullable();
+            $table->decimal('gross_amount', 15, 2);
+            $table->string('transaction_status')->default('pending');
+            $table->text('snap_token')->nullable();
+            $table->json('metadata')->nullable();
             $table->timestamps();
         });
     }
