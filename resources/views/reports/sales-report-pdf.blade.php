@@ -197,6 +197,32 @@
             </span>
         </div>
         <div class="stat-card">
+            <h3>Total Modal (HPP)</h3>
+            <div class="value">Rp {{ number_format($totalCost, 0, ',', '.') }}</div>
+            <span style="font-size: 8px; color: #666;">Harga Pokok Penjualan</span>
+        </div>
+        <div class="stat-card" style="background: #d1fae5;">
+            <h3 style="color: #065f46;">🎯 Keuntungan</h3>
+            <div class="value" style="color: #065f46;">Rp {{ number_format($totalProfit, 0, ',', '.') }}</div>
+            <span class="change {{ $profitChange >= 0 ? 'positive' : 'negative' }}">
+                {{ $profitChange > 0 ? '+' : '' }}{{ number_format($profitChange, 1) }}%
+            </span>
+        </div>
+        <div class="stat-card">
+            <h3>Margin Keuntungan</h3>
+            <div class="value" style="color: {{ $profitMargin >= 20 ? '#065f46' : ($profitMargin >= 10 ? '#92400e' : '#991b1b') }};">{{ number_format($profitMargin, 1) }}%</div>
+            <span style="font-size: 8px; color: #666;">
+                @if($profitMargin >= 20) Sangat Baik
+                @elseif($profitMargin >= 10) Cukup Baik
+                @else Perlu Evaluasi
+                @endif
+            </span>
+        </div>
+    </div>
+
+    {{-- Additional Stats Row --}}
+    <div class="stats-grid" style="margin-top: -15px; margin-bottom: 25px;">
+        <div class="stat-card">
             <h3>Total Transaksi</h3>
             <div class="value">{{ number_format($totalTransactions) }}</div>
             <span class="change {{ $transactionsChange >= 0 ? 'positive' : 'negative' }}">
@@ -213,6 +239,11 @@
         <div class="stat-card">
             <h3>Rata-rata Transaksi</h3>
             <div class="value">Rp {{ number_format($averageTransaction, 0, ',', '.') }}</div>
+        </div>
+        <div class="stat-card">
+            <h3>Produk Tidak Laku</h3>
+            <div class="value" style="color: {{ $notSellingProducts->count() > 0 ? '#991b1b' : '#065f46' }};">{{ $notSellingProducts->count() }}</div>
+            <span style="font-size: 8px; color: #666;">dalam periode ini</span>
         </div>
     </div>
 
@@ -286,6 +317,90 @@
             </tbody>
         </table>
     </div>
+
+    {{-- Top Profit Products --}}
+    <div class="section">
+        <div class="section-title" style="color: #065f46; border-color: #10b981;">🎯 Produk dengan Profit Tertinggi</div>
+        <table>
+            <thead>
+                <tr style="background: #10b981;">
+                    <th style="width: 5%;">Rank</th>
+                    <th style="width: 25%;">Nama Produk</th>
+                    <th style="width: 15%;">Kategori</th>
+                    <th style="width: 10%;" class="text-right">Qty</th>
+                    <th style="width: 15%;" class="text-right">Revenue</th>
+                    <th style="width: 15%;" class="text-right">Modal</th>
+                    <th style="width: 15%;" class="text-right">Profit</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($topProfitProducts as $index => $item)
+                    <tr>
+                        <td class="text-center">
+                            @if($index < 3)
+                                <span class="badge" style="background: {{ $index === 0 ? '#d1fae5' : '#f0fdf4' }}; color: #065f46;">
+                                    #{{ $index + 1 }}
+                                </span>
+                            @else
+                                {{ $index + 1 }}
+                            @endif
+                        </td>
+                        <td>{{ $item->product_name }}</td>
+                        <td>{{ $item->category_name ?? '-' }}</td>
+                        <td class="text-right">{{ number_format($item->total_quantity) }}</td>
+                        <td class="text-right">Rp {{ number_format($item->total_revenue, 0, ',', '.') }}</td>
+                        <td class="text-right">Rp {{ number_format($item->total_cost, 0, ',', '.') }}</td>
+                        <td class="text-right" style="color: #065f46; font-weight: bold;">Rp {{ number_format($item->total_profit, 0, ',', '.') }}</td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="7" class="text-center">Belum ada data profit</td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+
+    {{-- Not Selling Products --}}
+    @if($notSellingProducts->count() > 0)
+    <div class="section">
+        <div class="section-title" style="color: #991b1b; border-color: #ef4444;">⚠️ Produk Tidak Laku ({{ $notSellingProducts->count() }} produk)</div>
+        <table>
+            <thead>
+                <tr style="background: #ef4444;">
+                    <th style="width: 5%;">No</th>
+                    <th style="width: 35%;">Nama Produk</th>
+                    <th style="width: 25%;">Kategori</th>
+                    <th style="width: 15%;" class="text-right">Stok</th>
+                    <th style="width: 20%;" class="text-right">Harga Jual</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($notSellingProducts->take(15) as $index => $product)
+                    <tr>
+                        <td class="text-center">{{ $index + 1 }}</td>
+                        <td>{{ $product->name }}</td>
+                        <td>{{ $product->category->name ?? '-' }}</td>
+                        <td class="text-right">{{ number_format($product->stock) }} pcs</td>
+                        <td class="text-right">Rp {{ number_format($product->selling_price, 0, ',', '.') }}</td>
+                    </tr>
+                @endforeach
+                @if($notSellingProducts->count() > 15)
+                    <tr>
+                        <td colspan="5" class="text-center" style="font-style: italic; color: #666;">
+                            ... dan {{ $notSellingProducts->count() - 15 }} produk lainnya
+                        </td>
+                    </tr>
+                @endif
+            </tbody>
+        </table>
+        <div style="background: #fef3c7; padding: 8px; border-radius: 4px; margin-top: 10px;">
+            <p style="font-size: 9px; color: #92400e;">
+                <strong>💡 Rekomendasi:</strong> Pertimbangkan untuk memberikan promo atau diskon pada produk-produk ini untuk meningkatkan penjualan.
+            </p>
+        </div>
+    </div>
+    @endif
 
     {{-- Daily Sales Summary --}}
     <div class="section" style="page-break-before: always;">

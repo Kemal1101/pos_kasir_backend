@@ -136,7 +136,7 @@
             <ul class="items-center hidden space-x-6 lg:flex">
                 <li><a href="#fitur" class="text-gray-600 transition hover:text-violet-600">Fitur</a></li>
                 {{-- Mengganti tautan Masuk menjadi tombol biasa atau link untuk konsistensi --}}
-                <li><a href="/login" class="text-gray-600 transition hover:text-violet-600">Login</a></li>
+                <li><a href="{{ route('login.form') }}" class="text-gray-600 transition hover:text-violet-600">Login</a></li>
                 <li>
                     {{-- Tombol utama CTA --}}
                     <a href="/login"

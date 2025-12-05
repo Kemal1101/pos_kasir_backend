@@ -17,11 +17,14 @@ class DashboardController extends Controller
         $yesterday = now()->subDay()->toDateString();
 
         $totalSalesToday = (float) Sale::whereDate('sale_date', $today)
+            ->where('payment_status', 'paid')
             ->sum('total_amount');
         $totalSalesYesterday = (float) Sale::whereDate('sale_date', $yesterday)
+            ->where('payment_status', 'paid')
             ->sum('total_amount');
 
         $transactionCountToday = (int) Sale::whereDate('sale_date', $today)
+            ->where('payment_status', 'paid')
             ->count();
 
         $avgTransactionToday = $transactionCountToday > 0
@@ -35,27 +38,28 @@ class DashboardController extends Controller
         $lastMonthEnd = now()->subMonthNoOverflow()->endOfMonth();
 
         $productsSoldThisMonth = (int) SaleItem::whereHas('sale', function ($q) use ($startOfMonth, $endOfMonth) {
-            $q->whereBetween('sale_date', [$startOfMonth, $endOfMonth]);
+            $q->whereBetween('sale_date', [$startOfMonth, $endOfMonth])
+              ->where('payment_status', 'paid');
         })
             ->sum('quantity');
 
         $productsSoldLastMonth = (int) SaleItem::whereHas('sale', function ($q) use ($lastMonthStart, $lastMonthEnd) {
-            $q->whereBetween('sale_date', [$lastMonthStart, $lastMonthEnd]);
+            $q->whereBetween('sale_date', [$lastMonthStart, $lastMonthEnd])
+              ->where('payment_status', 'paid');
         })
             ->sum('quantity');
 
-        $recentSales = Sale::with(['payment', 'items'])
+        $recentSales = Sale::with(['payment', 'items', 'user'])
+            ->where('payment_status', 'paid')
             ->orderByDesc('sale_date')
             ->limit(5)
             ->get();
 
         $recentTransactions = $recentSales->map(function (Sale $sale) {
-            $itemsCount = (int) $sale->items->sum('quantity');
-            $time = $sale->sale_date ? Carbon::parse($sale->sale_date)->format('H:i') : '';
+            $time = $sale->sale_date ? Carbon::parse($sale->updated_at)->format('d M, H:i') : '';
             return [
-                'code' => 'TRX' . str_pad((string) $sale->sale_id, 3, '0', STR_PAD_LEFT),
+                'cashier' => optional($sale->user)->name ?? 'Unknown',
                 'time' => $time,
-                'items' => $itemsCount,
                 'amount' => (float) $sale->total_amount,
                 'method' => optional($sale->payment)->payment_method ?? '—',
             ];
@@ -69,8 +73,12 @@ class DashboardController extends Controller
             ->get();
 
         // Monthly sales totals
-        $salesThisMonthTotal = (float) Sale::whereBetween('sale_date', [$startOfMonth, $endOfMonth])->sum('total_amount');
-        $salesLastMonthTotal = (float) Sale::whereBetween('sale_date', [$lastMonthStart, $lastMonthEnd])->sum('total_amount');
+        $salesThisMonthTotal = (float) Sale::whereBetween('sale_date', [$startOfMonth, $endOfMonth])
+            ->where('payment_status', 'paid')
+            ->sum('total_amount');
+        $salesLastMonthTotal = (float) Sale::whereBetween('sale_date', [$lastMonthStart, $lastMonthEnd])
+            ->where('payment_status', 'paid')
+            ->sum('total_amount');
 
         // Percentage calculations with safe zero division handling
         $percentSalesToday = $totalSalesYesterday > 0
@@ -78,7 +86,9 @@ class DashboardController extends Controller
             : ($totalSalesToday > 0 ? 100 : 0);
 
         $daysInLastMonth = $lastMonthStart->daysInMonth;
-        $transactionsLastMonthTotal = (int) Sale::whereBetween('sale_date', [$lastMonthStart, $lastMonthEnd])->count();
+        $transactionsLastMonthTotal = (int) Sale::whereBetween('sale_date', [$lastMonthStart, $lastMonthEnd])
+            ->where('payment_status', 'paid')
+            ->count();
         $transactionsLastMonthDailyAvg = $daysInLastMonth > 0 ? $transactionsLastMonthTotal / $daysInLastMonth : 0;
         $percentTransactionsTodayVsLastMonth = $transactionsLastMonthDailyAvg > 0
             ? (($transactionCountToday - $transactionsLastMonthDailyAvg) / $transactionsLastMonthDailyAvg) * 100
@@ -105,6 +115,7 @@ class DashboardController extends Controller
         $salesMonthChangeClass = $colorClass($percentSalesThisMonthVsLastMonth);
 
         return view('pages.dashboard', [
+            'userName' => auth()->user()->name ?? 'User',
             'totalSalesToday' => $totalSalesToday,
             'transactionCountToday' => $transactionCountToday,
             'avgTransactionToday' => $avgTransactionToday,

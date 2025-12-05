@@ -73,10 +73,28 @@ class StockAdditionController extends Controller
 
             DB::commit();
 
+            // Return JSON response for AJAX requests
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Stok berhasil ditambahkan!',
+                    'data' => $stockAddition
+                ]);
+            }
+
             return redirect()->route('stock-additions.index')
                 ->with('success', 'Stok berhasil ditambahkan!');
         } catch (\Exception $e) {
             DB::rollBack();
+
+            // Return JSON response for AJAX requests
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gagal menambah stok: ' . $e->getMessage()
+                ], 500);
+            }
+
             return back()->withInput()->with('error', 'Gagal menambah stok: ' . $e->getMessage());
         }
     }

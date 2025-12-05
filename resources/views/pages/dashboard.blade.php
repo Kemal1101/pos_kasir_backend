@@ -3,7 +3,7 @@
 @section('content')
     <div class="flex justify-between items-center text-white mb-8 mt-2">
         <div>
-            <h2 class="text-2xl font-bold text-gray-900 md:text-white">Selamat Datang, Owner!</h2>
+            <h2 class="text-2xl font-bold text-gray-900 md:text-white">Selamat Datang, {{ $userName }}!</h2>
             <p class="text-sm opacity-90 text-gray-700 md:text-purple-100">Berikut adalah ringkasan toko Anda hari ini</p>
         </div>
         </div>
@@ -122,13 +122,18 @@
             <div class="space-y-4">
                 @forelse(($recentTransactions ?? []) as $trx)
                     <div class="flex justify-between items-center p-3 {{ $loop->odd ? 'hover:bg-gray-50' : 'bg-gray-50 border border-gray-100' }} rounded-lg transition">
-                        <div>
-                            <p class="font-bold text-gray-700 text-sm">{{ $trx['code'] }}</p>
-                            <p class="text-xs text-gray-500">{{ $trx['time'] }} - {{ $trx['items'] }} Item</p>
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
+                                <span class="text-purple-600 font-semibold text-xs">{{ strtoupper(substr($trx['cashier'], 0, 1)) }}</span>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-gray-700 text-sm">{{ $trx['cashier'] }}</p>
+                                <p class="text-xs text-gray-500">{{ $trx['time'] }}</p>
+                            </div>
                         </div>
                         <div class="text-right">
                             <p class="font-bold text-gray-800 text-sm">Rp {{ number_format($trx['amount'] ?? 0, 0, ',', '.') }}</p>
-                            <p class="text-xs text-gray-500">{{ $trx['method'] }}</p>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium {{ $trx['method'] === 'Cash' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700' }}">{{ $trx['method'] }}</span>
                         </div>
                     </div>
                 @empty
