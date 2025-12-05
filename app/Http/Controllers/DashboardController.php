@@ -51,12 +51,13 @@ class DashboardController extends Controller
 
         $recentSales = Sale::with(['payment', 'items', 'user'])
             ->where('payment_status', 'paid')
-            ->orderByDesc('sale_date')
+            ->whereDate('updated_at', $today)
+            ->orderByDesc('updated_at')
             ->limit(5)
             ->get();
 
         $recentTransactions = $recentSales->map(function (Sale $sale) {
-            $time = $sale->sale_date ? Carbon::parse($sale->updated_at)->format('d M, H:i') : '';
+            $time = $sale->updated_at ? Carbon::parse($sale->updated_at)->format('d M, H:i') : '';
             return [
                 'cashier' => optional($sale->user)->name ?? 'Unknown',
                 'time' => $time,
