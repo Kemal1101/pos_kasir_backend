@@ -25,13 +25,12 @@ class Response
     {
         // handle validation errors
         if ($error instanceof ValidationException) {
+            // Use custom message if provided, otherwise use Laravel default
+            $validationMessage = ($message !== 'Something went wrong') ? $message : 'The given data was invalid.';
             return response()->json([
-                'meta' => [
-                    'status' => 400,
-                    'message' => $message,
-                ],
-                'data' => $error->errors(),
-            ], 400);
+                'message' => $validationMessage,
+                'errors' => $error->errors(),
+            ], 422);
         }
 
         // model not found
@@ -49,11 +48,11 @@ class Response
         if ($error instanceof AuthenticationException) {
             return response()->json([
                 'meta' => [
-                    'status' => 403,
+                    'status' => 401,
                     'message' => 'Unauthorized',
                 ],
                 'data' => null,
-            ], 403);
+            ], 401);
         }
 
         // fallback
@@ -83,11 +82,11 @@ class Response
     {
         return response()->json([
             'meta' => [
-                'status' => 403,
+                'status' => 401,
                 'message' => $message,
             ],
             'data' => null,
-        ], 403);
+        ], 401);
     }
 
     public static function token(string $token, $user = null, ?int $expires = null): JsonResponse
@@ -98,7 +97,7 @@ class Response
                 'message' => 'Login berhasil',
             ],
             'data' => [
-                'access_token' => $token,
+                'token' => $token,
                 'token_type'   => 'bearer',
                 'expires_in'   => $expires,
                 'user'         => $user,

@@ -18,11 +18,11 @@ class ProductController extends Controller
     {
         try {
             $data = $request->validate([
-                'categories_id' => 'required|integer',
+                'categories_id' => 'required|integer|exists:categories,categories_id',
                 'name' => 'required|string|max:191',
-                'cost_price' => 'required|numeric',
-                'selling_price' => 'required|numeric',
-                'stock' => 'required|integer',
+                'cost_price' => 'required|numeric|min:0',
+                'selling_price' => 'required|numeric|min:0',
+                'stock' => 'required|integer|min:0',
                 'description' => 'nullable|string',
                 'barcode' => 'nullable|string|max:100',
                 'product_images' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',

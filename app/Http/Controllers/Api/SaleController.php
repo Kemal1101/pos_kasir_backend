@@ -204,7 +204,7 @@ class SaleController extends Controller
                 // Delete the sale
                 $sale->delete();
 
-                return Response::success(null, 'Sale deleted successfully');
+                return Response::success(null, 'Sale deleted');
             });
         } catch (Throwable $e) {
             return Response::error($e);

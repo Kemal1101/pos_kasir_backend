@@ -19,14 +19,24 @@
     </source>
     <php>
         <env name="APP_ENV" value="testing"/>
+        <env name="APP_KEY" value="base64:FwwKim6GMFmS2+bcHrErri+keuj0AhYKZewcTtJfFPo="/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="CACHE_DRIVER" value="array"/>
-        <!-- <env name="DB_CONNECTION" value="sqlite"/> -->
-        <!-- <env name="DB_DATABASE" value=":memory:"/> -->
+        <env name="DB_CONNECTION" value="mysql"/>
+        <env name="DB_DATABASE" value="pos_kasir_testing"/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
+        <env name="JWT_SECRET" value="TEST_JWT_SECRET_KEY_FOR_TESTING"/>
+        <env name="CLOUDINARY_URL" value="cloudinary://test:test@test"/>
     </php>
+    <coverage>
+        <report>
+            <html outputDirectory="coverage/html"/>
+            <text outputFile="coverage/coverage.txt"/>
+            <clover outputFile="coverage/clover.xml"/>
+        </report>
+    </coverage>
 </phpunit>

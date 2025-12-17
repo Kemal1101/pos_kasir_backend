@@ -59,6 +59,14 @@ Route::group(['prefix' => 'products'], function () {
     Route::delete('/{id}', [ProductController::class, 'delete_product']);
 });
 
+// Users management routes
+Route::group(['prefix' => 'users'], function () {
+    Route::post('/add_user', [UsersController::class, 'add_user']);
+    Route::put('/{id}', [UsersController::class, 'edit_user']);
+    Route::delete('/{id}', [UsersController::class, 'delete_user']);
+    Route::post('/list_user', [UsersController::class, 'list_user']);
+});
+
 // Sales management routes
 Route::group(['prefix' => 'sales'], function () {
     // Create a new draft sale
@@ -76,10 +84,4 @@ Route::group(['prefix' => 'sales'], function () {
 
     // Delete a draft sale
     Route::delete('/{saleId}', [SaleController::class, 'delete_sale']);
-});
-
-Route::prefix('payment')->group(function () {
-    Route::post('/create', [PaymentController::class, 'createPayment']);
-    Route::post('/notification', [PaymentController::class, 'handleNotification']);
-    Route::get('/status/{orderId}', [PaymentController::class, 'checkStatus']);
 });
