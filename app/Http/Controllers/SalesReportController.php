@@ -325,6 +325,23 @@ class SalesReportController extends Controller
         $totalProfit = $totalRevenue - $totalCost;
         $profitMargin = $totalRevenue > 0 ? ($totalProfit / $totalRevenue) * 100 : 0;
 
+        // Previous period profit for comparison
+        $previousProfitData = DB::table('sale_items')
+            ->join('sales', 'sale_items.sale_id', '=', 'sales.sale_id')
+            ->join('products', 'sale_items.product_id', '=', 'products.product_id')
+            ->select(
+                DB::raw('SUM(sale_items.subtotal) as total_revenue'),
+                DB::raw('SUM(sale_items.quantity * products.cost_price) as total_cost')
+            )
+            ->whereBetween('sales.sale_date', [$previousPeriodStart, $previousPeriodEnd])
+            ->where('sales.payment_status', 'paid')
+            ->first();
+
+        $previousProfit = (float) (($previousProfitData->total_revenue ?? 0) - ($previousProfitData->total_cost ?? 0));
+        $profitChange = $previousProfit > 0
+            ? (($totalProfit - $previousProfit) / $previousProfit) * 100
+            : ($totalProfit > 0 ? 100 : 0);
+
         // Products sorted by profit (highest profit first)
         $topProfitProducts = DB::table('sale_items')
             ->join('sales', 'sale_items.sale_id', '=', 'sales.sale_id')
@@ -391,6 +408,7 @@ class SalesReportController extends Controller
             'totalCost',
             'totalProfit',
             'profitMargin',
+            'profitChange',
             'topProfitProducts',
             'notSellingProducts'
         );

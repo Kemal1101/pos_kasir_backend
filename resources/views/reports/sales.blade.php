@@ -4,8 +4,8 @@
 <div x-data="salesReportData()">
 
     {{-- HEADER --}}
-    <div class="flex flex-col items-start justify-between gap-4 mt-2 mb-8 md:flex-row md:items-center">
-        <div>
+    <div class="mt-2 mb-6">
+        <div class="mb-4">
             <h2 class="text-2xl font-bold text-gray-900 md:text-white">
                 Laporan Penjualan
             </h2>
@@ -14,24 +14,24 @@
             </p>
         </div>
 
-        <div class="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+        <div class="flex flex-col gap-3 p-4 bg-white rounded-lg shadow-sm md:flex-row md:items-center md:justify-between">
             {{-- Date Range Filter --}}
-            <form method="GET" action="{{ route('sales.report') }}" id="dateRangeForm" class="flex items-center gap-3">
+            <form method="GET" action="{{ route('sales.report') }}" id="dateRangeForm" class="flex flex-col gap-3 sm:flex-row sm:items-center">
                 <div class="flex items-center gap-2">
-                    <label class="text-sm font-semibold text-gray-900 md:text-white">Dari:</label>
+                    <label class="text-sm font-semibold text-gray-700">Dari:</label>
                     <input type="date"
                            name="start_date"
                            value="{{ $startDate }}"
                            class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
                 </div>
                 <div class="flex items-center gap-2">
-                    <label class="text-sm font-semibold text-gray-900 md:text-white">Sampai:</label>
+                    <label class="text-sm font-semibold text-gray-700">Sampai:</label>
                     <input type="date"
                            name="end_date"
                            value="{{ $endDate }}"
                            class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
                 </div>
-                <button type="submit" class="px-4 py-2 text-sm font-semibold text- transition rounded-lg shadow-md" style="background-color: #D7AC28;" onmouseover="this.style.backgroundColor='#c29a23'" onmouseout="this.style.backgroundColor='#D7AC28'">
+                <button type="submit" class="px-4 py-2 text-sm font-semibold text-white transition rounded-lg shadow-md" style="background-color: #D7AC28;" onmouseover="this.style.backgroundColor='#c29a23'" onmouseout="this.style.backgroundColor='#D7AC28'">
                     <i class="fa-solid fa-filter"></i> Filter
                 </button>
             </form>
@@ -44,7 +44,9 @@
                 </button>
             </div>
         </div>
-    </div>    {{-- STATISTICS CARDS - Row 1: Keuangan Utama --}}
+    </div>
+
+    {{-- STATISTICS CARDS - Row 1: Keuangan Utama --}}
     <div class="grid grid-cols-1 gap-5 mb-5 md:grid-cols-3">
 
         {{-- Total Penjualan (Revenue) --}}

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id" x-data="{ openSidebar: false }">
+<html lang="id">
 
 <head>
     <meta charset="UTF-8">
@@ -27,10 +27,26 @@
         [x-cloak] {
             display: none !important;
         }
+
+        /* Avatar - positioned absolute, scrolls with content */
+        .avatar-fixed-wrapper {
+            position: absolute !important;
+            top: 1rem !important;
+            right: 1.5rem !important;
+            z-index: 9999999 !important;
+            pointer-events: auto !important;
+            display: none !important;
+        }
+        
+        @media (min-width: 768px) {
+            .avatar-fixed-wrapper {
+                display: flex !important;
+            }
+        }
     </style>
 </head>
 
-<body class="bg-gray-50">
+<body class="bg-gray-50" x-data="{ openSidebar: false, openDropdown: false }">
 
     <div class="flex h-screen overflow-hidden">
 
@@ -137,7 +153,55 @@
         </aside>
 
         <!-- MAIN CONTENT -->
-        <main class="relative flex-1 h-full overflow-y-auto bg-gray-50">
+        <main class="relative flex-1 h-full overflow-y-auto bg-gray-50" id="mainContent">
+
+            <!-- Desktop Avatar - Scrolls with content -->
+            @if (auth()->check())
+                <div class="avatar-fixed-wrapper">
+                    <div class="relative flex items-center gap-3">
+                        <button @click="openDropdown = !openDropdown" @click.outside="openDropdown = false"
+                            class="flex items-center gap-3 px-4 py-2 transition-all duration-200 bg-white rounded-full shadow-lg hover:shadow-xl">
+                            <div class="hidden text-right sm:block">
+                                <div class="text-sm font-semibold text-gray-800">{{ auth()->user()->name }}</div>
+                                <div class="text-xs text-gray-500">{{ auth()->user()->role->name ?? 'User' }}</div>
+                            </div>
+                            <div class="flex items-center justify-center w-10 h-10 font-bold text-white rounded-full bg-gradient-to-br from-purple-600 to-blue-500">
+                                {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                            </div>
+                            <svg class="w-4 h-4 text-gray-600 transition-transform" :class="openDropdown && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+
+                        <!-- Dropdown -->
+                        <div x-show="openDropdown" x-transition:enter="transition ease-out duration-100"
+                            x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                            x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100"
+                            x-transition:leave-end="opacity-0 scale-95"
+                            class="absolute right-0 w-64 mt-2 bg-white rounded-lg shadow-xl top-full" style="z-index: 1000000;">
+                            
+                            <div class="p-4 border-b">
+                                <div class="font-semibold text-gray-800">{{ auth()->user()->name }}</div>
+                                <div class="text-sm text-gray-500">{{ auth()->user()->email }}</div>
+                                <div class="inline-block px-2 py-1 mt-2 text-xs font-medium text-purple-700 bg-purple-100 rounded-full">
+                                    {{ auth()->user()->role->name ?? 'User' }}
+                                </div>
+                            </div>
+
+                            <form method="POST" action="{{ route('logout') }}" class="p-2">
+                                @csrf
+                                <button type="submit" class="flex items-center w-full gap-2 px-4 py-2 text-sm text-red-600 transition-colors rounded-lg hover:bg-red-50">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                                    </svg>
+                                    Keluar
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            @endif
 
             <!-- TOP BAR WITH TOGGLE (mobile only) -->
             <header class="flex items-center justify-between w-full h-16 px-4 bg-purple-600 md:hidden">
@@ -174,7 +238,7 @@
                                 <p class="text-sm font-medium text-gray-900">{{ auth()->user()->name }}</p>
                                 <p class="text-xs text-gray-500">{{ auth()->user()->email }}</p>
                             </div>
-                            <form method="POST" action="{{ route('logout.perform') }}">
+                            <form method="POST" action="{{ route('logout') }}">
                                 @csrf
                                 <button type="submit" class="flex items-center w-full gap-2 px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -191,50 +255,6 @@
 
             <!-- Background Header Desktop -->
             <header class="absolute top-0 left-0 hidden w-full h-40 bg-purple-600 md:block"></header>
-            
-            <!-- Desktop Avatar Dropdown (outside of overflow container) -->
-            @if (auth()->check())
-                <div x-data="{ openDropdown: false }" class="fixed hidden md:block right-6 top-4" style="z-index: 9999;">
-                    <button @click="openDropdown = !openDropdown" class="flex items-center gap-3 focus:outline-none">
-                        <div class="hidden text-right sm:block">
-                            <p class="text-sm font-medium text-white">{{ auth()->user()->name }}</p>
-                            <p class="text-xs text-purple-200">{{ auth()->user()->role->name ?? 'User' }}</p>
-                        </div>
-                        <div class="flex items-center justify-center w-10 h-10 text-sm font-semibold text-purple-700 bg-white rounded-full ring-2 ring-purple-300">
-                            {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
-                        </div>
-                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                        </svg>
-                    </button>
-                    
-                    <div x-show="openDropdown" 
-                         x-cloak
-                         @click.outside="openDropdown = false"
-                         x-transition:enter="transition ease-out duration-100"
-                         x-transition:enter-start="transform opacity-0 scale-95"
-                         x-transition:enter-end="transform opacity-100 scale-100"
-                         x-transition:leave="transition ease-in duration-75"
-                         x-transition:leave-start="transform opacity-100 scale-100"
-                         x-transition:leave-end="transform opacity-0 scale-95"
-                         class="absolute right-0 w-48 py-1 mt-2 bg-white rounded-lg shadow-lg">
-                        <div class="px-4 py-3 border-b">
-                            <p class="text-sm font-medium text-gray-900">{{ auth()->user()->name }}</p>
-                            <p class="text-xs text-gray-500">{{ auth()->user()->email }}</p>
-                        </div>
-                        <form method="POST" action="{{ route('logout.perform') }}">
-                            @csrf
-                            <button type="submit" class="flex items-center w-full gap-2 px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                                </svg>
-                                Keluar
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            @endif
 
             <div class="relative p-6 mt-10 md:mt-0" style="z-index: 2;">
                 @yield('content')

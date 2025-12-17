@@ -44,7 +44,7 @@ Route::group(['prefix' => 'categories'], function () {
 });
 
 // Authentication (web session)
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout.perform');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Routes untuk role_id = 1 (Admin/Owner) dan role_id = 2 (Gudang)
 Route::middleware(['jwt.cookie', 'role:Admin,Gudang'])->group(function () {
