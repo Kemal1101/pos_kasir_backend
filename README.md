@@ -49,6 +49,59 @@ We would like to extend our thanks to the following sponsors for funding Laravel
 - **[byte5](https://byte5.de)**
 - **[OP.GG](https://op.gg)**
 
+---
+
+## 🧪 Integration Testing
+
+This project includes comprehensive integration tests covering all major system workflows.
+
+### Quick Start
+```bash
+# Run all integration tests
+php artisan test --testsuite=Integration
+
+# Run specific test file
+php artisan test tests/Integration/CompleteSalesFlowTest.php
+
+# Run with coverage
+php artisan test --testsuite=Integration --coverage
+```
+
+### Test Coverage
+
+| Module | Test File | Test Cases | Status |
+|--------|-----------|------------|--------|
+| Sales Flow | CompleteSalesFlowTest.php | 6 | ✅ |
+| Inventory | InventoryManagementFlowTest.php | 8 | ✅ |
+| Authentication | UserAuthenticationFlowTest.php | 8 | ✅ |
+| Reporting | SalesReportingFlowTest.php | 11 | ✅ |
+| Complete Scenario | CompletePOSSystemScenarioTest.php | 2 | ✅ |
+
+**Total: 35 Integration Test Cases**
+
+### Documentation
+
+- 📖 [Complete Integration Testing Guide](INTEGRATION_TESTING.md)
+- 🚀 [Quick Start Guide](INTEGRATION_TESTING_QUICKSTART.md)
+- 📊 [Test Summary](INTEGRATION_TESTING_SUMMARY.md)
+- 💡 [Test Examples](tests/Integration/Examples/IntegrationTestExamples.php)
+
+### Setup Testing Database
+
+```bash
+# Create testing database
+mysql -u root -p
+CREATE DATABASE pos_kasir_testing;
+```
+
+Ensure `phpunit.xml` has the correct configuration:
+```xml
+<env name="DB_DATABASE" value="pos_kasir_testing"/>
+<env name="JWT_SECRET" value="TEST_JWT_SECRET_KEY_FOR_TESTING"/>
+```
+
+---
+
 ## Contributing
 
 Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).

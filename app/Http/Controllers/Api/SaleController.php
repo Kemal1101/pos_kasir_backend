@@ -105,7 +105,7 @@ class SaleController extends Controller
                     'total_amount' => $total,
                 ]);
 
-                return Response::success($sale->load(['items.product']), 'Item added to sale');
+                return Response::success($sale->load(['items.product']), 'Item added to sale', 201);
             });
         } catch (Throwable $e) {
             return Response::error($e);
@@ -184,9 +184,9 @@ class SaleController extends Controller
                 return Response::notFound('Sale not found');
             }
 
-            // Prevent deletion of completed sales
-            if ($sale->payment_status !== 'draft') {
-                return Response::error(null, 'Cannot delete completed sales', 400);
+            // Prevent cancellation of already cancelled sales
+            if ($sale->payment_status === 'cancelled') {
+                return Response::error(null, 'Sale is already cancelled', 400);
             }
 
             return DB::transaction(function () use ($sale) {
@@ -198,13 +198,12 @@ class SaleController extends Controller
                     }
                 }
 
-                // Delete all sale items first (foreign key constraint)
-                SaleItem::where('sale_id', $sale->sale_id)->delete();
+                // Mark sale as cancelled instead of deleting
+                $sale->update([
+                    'payment_status' => 'cancelled',
+                ]);
 
-                // Delete the sale
-                $sale->delete();
-
-                return Response::success(null, 'Sale deleted');
+                return Response::success($sale, 'Sale cancelled');
             });
         } catch (Throwable $e) {
             return Response::error($e);

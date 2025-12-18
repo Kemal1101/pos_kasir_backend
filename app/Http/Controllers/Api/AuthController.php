@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Utils\Response;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
@@ -44,5 +45,39 @@ class AuthController extends Controller
             JWTAuth::user(),
             JWTAuth::factory()->getTTL() * 60
         );
+    }
+
+    public function changePassword(Request $request)
+    {
+        $validated = $request->validate([
+            'old_password' => 'required|string',
+            'new_password' => 'required|string|min:8|confirmed',
+        ]);
+
+        try {
+            $user = JWTAuth::parseToken()->authenticate();
+
+            if (!$user) {
+                return Response::unauthorized('User not authenticated');
+            }
+
+            // Verify old password
+            if (!Hash::check($validated['old_password'], $user->password)) {
+                return response()->json([
+                    'meta' => [
+                        'status' => 'error',
+                        'message' => 'Old password is incorrect',
+                    ],
+                ], 422);
+            }
+
+            // Update password
+            $user->password = Hash::make($validated['new_password']);
+            $user->save();
+
+            return Response::success(null, 'Password changed successfully');
+        } catch (\Throwable $e) {
+            return Response::error($e, 'Failed to change password');
+        }
     }
 }

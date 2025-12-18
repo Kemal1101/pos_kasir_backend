@@ -63,7 +63,7 @@ class ProductControllerTest extends TestCase
             'Authorization' => 'Bearer ' . $this->token,
         ])->postJson('/api/products/add_product', $productData);
 
-        $response->assertStatus(200)
+        $response->assertStatus(201)
             ->assertJsonStructure([
                 'meta' => ['status', 'message'],
                 'data' => [
@@ -117,7 +117,7 @@ class ProductControllerTest extends TestCase
             'Authorization' => 'Bearer ' . $this->token,
         ])->postJson('/api/products/add_product', $productData);
 
-        $response->assertStatus(200);
+        $response->assertStatus(201);
 
         $this->assertDatabaseHas('products', [
             'name' => 'Product with Image',
@@ -534,7 +534,7 @@ class ProductControllerTest extends TestCase
             'Authorization' => 'Bearer ' . $this->token,
         ])->postJson('/api/products/add_product', $productData);
 
-        $response->assertStatus(200);
+        $response->assertStatus(201);
 
         $this->assertDatabaseHas('products', [
             'name' => 'Out of Stock Product',

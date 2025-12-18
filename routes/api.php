@@ -4,7 +4,9 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\SaleController;
+use App\Http\Controllers\Api\StockAdditionController;
 use App\Http\Controllers\Api\UsersController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -26,6 +28,7 @@ Route::middleware(['jwt.verify'])->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/refresh', [AuthController::class, 'refresh']);
+    Route::post('/change-password', [AuthController::class, 'changePassword']);
 });
 
 // Category management routes (protected)
@@ -84,4 +87,21 @@ Route::group(['prefix' => 'sales'], function () {
 
     // Delete a draft sale
     Route::delete('/{saleId}', [SaleController::class, 'delete_sale']);
+});
+
+// Stock additions routes
+Route::prefix('stock-additions')->middleware(['jwt.verify'])->group(function () {
+    Route::get('/', [StockAdditionController::class, 'index']);
+    Route::post('/', [StockAdditionController::class, 'store']);
+    Route::get('/{id}', [StockAdditionController::class, 'show']);
+});
+
+// Reports routes
+Route::prefix('reports')->middleware(['jwt.verify'])->group(function () {
+    Route::get('/sales/range', [ReportController::class, 'salesByDateRange']);
+    Route::get('/products/performance', [ReportController::class, 'productPerformance']);
+    Route::get('/cashiers/performance', [ReportController::class, 'cashierPerformance']);
+    Route::get('/profit/analysis', [ReportController::class, 'profitAnalysis']);
+    Route::get('/products/slow-moving', [ReportController::class, 'slowMovingProducts']);
+    Route::get('/sales/compare', [ReportController::class, 'comparePeriods']);
 });

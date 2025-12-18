@@ -29,7 +29,7 @@ class RoleMiddleware
 
             // Cek apakah role diizinkan
             if (!in_array($roleName, $roles)) {
-                return $this->redirectOrJson($request, 'Anda tidak memiliki akses ke halaman ini');
+                return $this->redirectOrJson($request, 'Anda tidak memiliki akses ke halaman ini', null, 403);
             }
         } catch (TokenExpiredException $e) {
             return $this->redirectOrJson($request, 'Token telah kadaluarsa', $e, 401);

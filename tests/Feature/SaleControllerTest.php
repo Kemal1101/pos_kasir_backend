@@ -163,7 +163,7 @@ class SaleControllerTest extends TestCase
             'discount_amount' => 100000,
         ]);
 
-        $response->assertStatus(200)
+        $response->assertStatus(201)
             ->assertJson([
                 'meta' => [
                     'message' => 'Item added to sale',
@@ -202,7 +202,7 @@ class SaleControllerTest extends TestCase
             'product_id' => $this->product->product_id,
         ]);
 
-        $response->assertStatus(200);
+        $response->assertStatus(201);
 
         $this->assertDatabaseHas('sale_items', [
             'sale_id' => $sale->sale_id,
@@ -474,16 +474,17 @@ class SaleControllerTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJsonFragment([
-                'message' => 'Sale deleted',
+                'message' => 'Sale cancelled',
             ]);
 
         // Stock should be restored
         $this->product->refresh();
         $this->assertEquals(10, $this->product->stock);
 
-        // Sale should be deleted
-        $this->assertDatabaseMissing('sales', [
+        // Sale should be cancelled, not deleted
+        $this->assertDatabaseHas('sales', [
             'sale_id' => $sale->sale_id,
+            'payment_status' => 'cancelled',
         ]);
     }
 
@@ -503,16 +504,17 @@ class SaleControllerTest extends TestCase
 
         $response = $this->deleteJson("/api/sales/{$sale->sale_id}");
 
-        $response->assertStatus(400)
+        $response->assertStatus(200)
             ->assertJson([
                 'meta' => [
-                    'message' => 'Cannot delete completed sales',
+                    'message' => 'Sale cancelled',
                 ],
             ]);
 
-        // Sale should still exist
+        // Sale should be cancelled
         $this->assertDatabaseHas('sales', [
             'sale_id' => $sale->sale_id,
+            'payment_status' => 'cancelled',
         ]);
     }
 
@@ -596,7 +598,7 @@ class SaleControllerTest extends TestCase
             'quantity' => 5,
         ]);
 
-        $response->assertStatus(200);
+        $response->assertStatus(201);
 
         $this->product->refresh();
         $this->assertEquals(5, $this->product->stock);
@@ -623,7 +625,7 @@ class SaleControllerTest extends TestCase
             'discount_amount' => 0,
         ]);
 
-        $response->assertStatus(200);
+        $response->assertStatus(201);
 
         $sale->refresh();
         $this->assertEquals(7000000, $sale->subtotal);

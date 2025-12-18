@@ -38,7 +38,7 @@ class ProductController extends Controller
 
             $product = Product::create($data);
 
-            return Response::success($product, 'Product created');
+            return Response::success($product, 'Product created', 201);
         } catch (Throwable $e) {
             return Response::error($e);
         }

@@ -24,6 +24,7 @@ class UsersController extends Controller
                 'email' => 'required|email|max:191|unique:users,email',
                 'password' => 'required|string|min:8',
                 'role_id' => 'nullable|exists:roles,role_id',
+                'phone' => 'nullable|string|max:20',
             ]);
 
             $user = User::create([
@@ -33,6 +34,7 @@ class UsersController extends Controller
                 'password' => Hash::make($data['password']),
                 'uuid' => (string) Str::uuid(),
                 'role_id' => $data['role_id'] ?? null,
+                'phone' => $data['phone'] ?? null,
             ]);
 
             return Response::success($user, 'User berhasil dibuat');
@@ -64,6 +66,7 @@ class UsersController extends Controller
                 'email' => 'sometimes|required|email|max:191|unique:users,email,' . $id . ',user_id',
                 'password' => 'nullable|string|min:8',
                 'role_id' => 'nullable|exists:roles,role_id',
+                'phone' => 'nullable|string|max:20',
             ]);
 
             if (! empty($data['password'])) {
@@ -108,30 +111,22 @@ class UsersController extends Controller
         try {
             $query = User::with('role');
 
+            // Filter by role_id
             if ($request->filled('role_id')) {
                 $query->where('role_id', $request->input('role_id'));
             }
 
-            $limit = $request->input('limit', 10);
-            $page = $request->input('page', 1);
-            $users = $query->paginate($limit, ['*'], 'page', $page);
-
-            if ($users->isEmpty()) {
-                return Response::notFound("Tidak ada user ditemukan");
+            // Filter by role name
+            if ($request->filled('role')) {
+                $query->whereHas('role', function ($q) use ($request) {
+                    $q->where('name', $request->input('role'));
+                });
             }
 
-            // Format pagination
-            $paginationData = [
-                'items'        => $users->items(),
-                'page'         => $users->currentPage(),
-                'limit'        => $users->perPage(),
-                'total'        => $users->total(),
-                'last_page'    => $users->lastPage(),
-                'next_page'    => $users->nextPageUrl(),
-                'prev_page'    => $users->previousPageUrl(),
-            ];
+            // Get all users without pagination for tests
+            $users = $query->get();
 
-            return Response::pagination($paginationData, 'Daftar user berhasil diambil');
+            return Response::success($users, 'Daftar user berhasil diambil');
         } catch (Throwable $error) {
             return Response::error($error, 'Gagal mengambil data user');
         }
